@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Location & IP</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #eef2f3, #d9e2ec);
+      padding: 40px;
+      text-align: center;
+      color: #333;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    .info-box {
+      background: white;
+      display: inline-block;
+      padding: 20px 30px;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    .label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    #error {
+      color: red;
+      margin-top: 20px;
+    }
+    #map {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <h1>Your Location and IP Info</h1>
+  <div class="info-box">
+    <div class="label">IP Address:</div>
+    <div id="ip">Loading...</div>
+
+    <div class="label">Latitude:</div>
+    <div id="latitude">Loading...</div>
+
+    <div class="label">Longitude:</div>
+    <div id="longitude">Loading...</div>
+  </div>
+
+  <div id="error"></div>
+  <div id="map"></div>
+
+  <script>
+    // Get IP address
+    fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('ip').textContent = data.ip;
+      })
+      .catch(() => {
+        document.getElementById('ip').textContent = 'Unable to retrieve IP';
+      });
+
+    // Initialize map using Leaflet.js
+    function initMap(lat, lng) {
+      const map = L.map('map').setView([lat, lng], 13);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Add a marker
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup('You are here!')
+        .openPopup();
+    }
+
+    // Get geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          document.getElementById('latitude').textContent = lat;
+          document.getElementById('longitude').textContent = lng;
+          initMap(lat, lng);
+        },
+        error => {
+          document.getElementById('error').textContent = 'Error retrieving location: ' + error.message;
+          document.getElementById('latitude').textContent = 'Unavailable';
+          document.getElementById('longitude').textContent = 'Unavailable';
+        }
+      );
+    } else {
+      document.getElementById('error').textContent = 'Geolocation is not supported by your browser.';
+      document.getElementById('latitude').textContent = 'Unsupported';
+      document.getElementById('longitude').textContent = 'Unsupported';
+    }
+  </script>
+
+</body>
+</html>
